@@ -38,6 +38,7 @@ brew install \
   ripgrep \
   lazygit \
   neovim \
+  tmux \
   node \
   git
 success "CLI tools installed"
@@ -75,6 +76,12 @@ if [[ -d "$NVIM_CONFIG" ]]; then
 else
   install_lazyvim
 fi
+
+# ── tmux ──────────────────────────────────────────────────────────────────────
+
+info "Linking tmux config..."
+ln -sf "$(pwd)/.tmux.conf" "$HOME/.tmux.conf"
+success "~/.tmux.conf linked"
 
 # ── Claude Code ───────────────────────────────────────────────────────────────
 
