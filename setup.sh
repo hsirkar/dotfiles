@@ -50,7 +50,7 @@ brew install --cask iterm2
 success "iTerm2 installed"
 
 info "Installing JetBrainsMono Nerd Font..."
-brew install --cask font-jetbrains-mono-nerd-font
+# brew install --cask font-jetbrains-mono-nerd-font
 success "JetBrainsMono Nerd Font installed"
 
 # ── LazyVim ───────────────────────────────────────────────────────────────────
@@ -86,8 +86,11 @@ success "~/.tmux.conf linked"
 # ── Claude Code ───────────────────────────────────────────────────────────────
 
 info "Installing Claude Code..."
-npm install -g @anthropic-ai/claude-code
+curl -fsSL https://claude.ai/install.sh | sh
 success "Claude Code installed"
+
+# caveman plugin
+curl -fsSL https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.sh | bash
 
 # ── Done ──────────────────────────────────────────────────────────────────────
 
