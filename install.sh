@@ -15,7 +15,7 @@ brew install \
 brew install --cask \
   iterm2 alt-tab rectangle hiddenbar google-chrome firefox \
   obsidian postman unnaturalscrollwheels \
-  windscribe spotify qbittorrent docker vlc
+  windscribe spotify qbittorrent docker vlc minecraft
 
 # ── Claude Code ───────────────────────────────────────────────────────────────
 curl -fsSL https://claude.ai/install.sh | bash
