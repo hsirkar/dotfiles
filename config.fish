@@ -5,6 +5,9 @@ else if test -x /usr/local/bin/brew
     /usr/local/bin/brew shellenv | source
 end
 
+# ── Claude Code ───────────────────────────────────────────────────────────────
+fish_add_path $HOME/.local/bin
+
 # ── lazygit ───────────────────────────────────────────────────────────────────
 alias lg='lazygit'
 
