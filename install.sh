@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+export NONINTERACTIVE=1
+
 # ── Homebrew ──────────────────────────────────────────────────────────────────
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
@@ -12,10 +14,11 @@ brew install \
   tmux neovim lazygit
 
 # ── Casks ─────────────────────────────────────────────────────────────────────
-brew install --cask \
+brew install --cask --force \
   iterm2 alt-tab rectangle hiddenbar google-chrome firefox \
   obsidian postman unnaturalscrollwheels \
-  windscribe spotify qbittorrent docker vlc minecraft
+  windscribe spotify qbittorrent docker vlc minecraft \
+  font-jetbrains-mono-nerd-font
 
 # ── Default shell: fish ───────────────────────────────────────────────────────
 FISH_PATH="$(brew --prefix)/bin/fish"
