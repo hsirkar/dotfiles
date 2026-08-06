@@ -22,5 +22,10 @@ FISH_PATH="$(brew --prefix)/bin/fish"
 grep -qxF "$FISH_PATH" /etc/shells || echo "$FISH_PATH" | sudo tee -a /etc/shells
 chsh -s "$FISH_PATH"
 
+# ── Symlink config.fish ───────────────────────────────────────────────────────
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+mkdir -p "$HOME/.config/fish"
+ln -sf "$DOTFILES_DIR/config.fish" "$HOME/.config/fish/config.fish"
+
 # ── Claude Code ───────────────────────────────────────────────────────────────
 curl -fsSL https://claude.ai/install.sh | bash
