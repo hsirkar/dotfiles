@@ -21,7 +21,7 @@ brew install --cask --force \
 # ── Default shell: fish ───────────────────────────────────────────────────────
 FISH_PATH="$(brew --prefix)/bin/fish"
 grep -qxF "$FISH_PATH" /etc/shells || echo "$FISH_PATH" | sudo tee -a /etc/shells
-chsh -s "$FISH_PATH"
+[ "$SHELL" = "$FISH_PATH" ] || chsh -s "$FISH_PATH"
 
 # ── Symlink config.fish ───────────────────────────────────────────────────────
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
