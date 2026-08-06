@@ -1,25 +1,18 @@
-# ── Homebrew ──────────────────────────────────────────────────────────────────
-if test -x /opt/homebrew/bin/brew
-    /opt/homebrew/bin/brew shellenv | source
-else if test -x /usr/local/bin/brew
-    /usr/local/bin/brew shellenv | source
-end
-
-# ── Claude Code ───────────────────────────────────────────────────────────────
+# ── PATH ──────────────────────────────────────────────────────────────────────
+/opt/homebrew/bin/brew shellenv | source
 fish_add_path $HOME/.local/bin
+
+# ── Aliases ───────────────────────────────────────────────────────────────────
 alias sonnet='claude --model sonnet'
 alias opus='claude --model opus'
 alias resume='claude /resume'
-
-# ── lazygit ───────────────────────────────────────────────────────────────────
 alias lg='lazygit'
-
-# ── lsd (recommended aliases) ────────────────────────────────────────────────
 alias ls='lsd'
 alias l='lsd -l'
 alias la='lsd -a'
 alias lla='lsd -la'
 alias lt='lsd --tree'
+alias vi='nvim'
 
 # ── tmux ──────────────────────────────────────────────────────────────────────
 function tm
