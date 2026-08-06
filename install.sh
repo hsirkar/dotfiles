@@ -27,5 +27,8 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 mkdir -p "$HOME/.config/fish"
 ln -sf "$DOTFILES_DIR/config.fish" "$HOME/.config/fish/config.fish"
 
+# ── Symlink tmux.conf ─────────────────────────────────────────────────────────
+ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
+
 # ── Claude Code ───────────────────────────────────────────────────────────────
 curl -fsSL https://claude.ai/install.sh | bash
