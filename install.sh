@@ -17,5 +17,10 @@ brew install --cask \
   obsidian postman unnaturalscrollwheels \
   windscribe spotify qbittorrent docker vlc minecraft
 
+# ── Default shell: fish ───────────────────────────────────────────────────────
+FISH_PATH="$(brew --prefix)/bin/fish"
+grep -qxF "$FISH_PATH" /etc/shells || echo "$FISH_PATH" | sudo tee -a /etc/shells
+chsh -s "$FISH_PATH"
+
 # ── Claude Code ───────────────────────────────────────────────────────────────
 curl -fsSL https://claude.ai/install.sh | bash
