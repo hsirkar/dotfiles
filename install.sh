@@ -13,7 +13,7 @@ brew install \
 
 # ── Casks ─────────────────────────────────────────────────────────────────────
 brew install --cask \
-  iterm2 alt-tab rectangle hiddenbar \
+  iterm2 alt-tab rectangle hiddenbar google-chrome firefox \
   obsidian postman unnaturalscrollwheels \
   windscribe spotify qbittorrent docker
 
