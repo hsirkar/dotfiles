@@ -7,6 +7,9 @@ end
 
 # ── Claude Code ───────────────────────────────────────────────────────────────
 fish_add_path $HOME/.local/bin
+alias sonnet='claude --model sonnet'
+alias opus='claude --model opus'
+alias resume='claude /resume'
 
 # ── lazygit ───────────────────────────────────────────────────────────────────
 alias lg='lazygit'

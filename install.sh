@@ -32,3 +32,8 @@ ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 
 # ── Claude Code ───────────────────────────────────────────────────────────────
 curl -fsSL https://claude.ai/install.sh | bash
+
+mkdir -p "$HOME/.claude"
+ln -sf "$DOTFILES_DIR/.claude/settings.json" "$HOME/.claude/settings.json"
+ln -sf "$DOTFILES_DIR/.claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+ln -sf "$DOTFILES_DIR/.claude/statusline-command.sh" "$HOME/.claude/statusline-command.sh"
