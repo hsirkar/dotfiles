@@ -31,6 +31,14 @@ defaults import com.lwouis.alt-tab-macos "$DOTFILES_DIR/com.lwouis.alt-tab-macos
 killall AltTab 2>/dev/null || true
 open -a AltTab
 
+# ── Rectangle: import exported settings ───────────────────────────────────────
+jq -r '.defaults | to_entries[] | select(.value | length > 0) | "\(.key)\t\(.value | keys[0])\t\(.value | .[keys[0]])"' "$DOTFILES_DIR/RectangleConfig.json" | \
+while IFS=$'\t' read -r key type value; do
+  defaults write com.knollsoft.Rectangle "$key" "-$type" "$value"
+done
+killall Rectangle 2>/dev/null || true
+open -a Rectangle
+
 # ── UnnaturalScrollWheels: invert vertical scroll ─────────────────────────────
 defaults write com.theron.UnnaturalScrollWheels InvertVerticalScroll -bool true
 killall UnnaturalScrollWheels 2>/dev/null || true
