@@ -18,6 +18,12 @@ brew install --cask --force \
   windscribe spotify qbittorrent docker vlc minecraft \
   font-jetbrains-mono-nerd-font
 
+# ── Startup apps (login items) ────────────────────────────────────────────────
+for app in "Rectangle" "AltTab" "UnnaturalScrollWheels" "Hidden Bar"; do
+  osascript -e "tell application \"System Events\" to get the name of every login item" | grep -q "$app" || \
+  osascript -e "tell application \"System Events\" to make login item at end with properties {path:\"/Applications/$app.app\", hidden:false}"
+done
+
 # ── Default shell: fish ───────────────────────────────────────────────────────
 FISH_PATH="$(brew --prefix)/bin/fish"
 grep -qxF "$FISH_PATH" /etc/shells || echo "$FISH_PATH" | sudo tee -a /etc/shells
