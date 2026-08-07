@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # ── Homebrew ──────────────────────────────────────────────────────────────────
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
@@ -24,6 +26,11 @@ for app in "Rectangle" "AltTab" "UnnaturalScrollWheels" "Hidden Bar"; do
   osascript -e "tell application \"System Events\" to make login item at end with properties {path:\"/Applications/$app.app\", hidden:false}"
 done
 
+# ── AltTab: import exported settings ──────────────────────────────────────────
+defaults import com.lwouis.alt-tab-macos "$DOTFILES_DIR/com.lwouis.alt-tab-macos.plist"
+killall AltTab 2>/dev/null || true
+open -a AltTab
+
 # ── UnnaturalScrollWheels: invert vertical scroll ─────────────────────────────
 defaults write com.theron.UnnaturalScrollWheels InvertVerticalScroll -bool true
 killall UnnaturalScrollWheels 2>/dev/null || true
@@ -35,7 +42,6 @@ grep -qxF "$FISH_PATH" /etc/shells || echo "$FISH_PATH" | sudo tee -a /etc/shell
 [ "$SHELL" = "$FISH_PATH" ] || chsh -s "$FISH_PATH"
 
 # ── Symlink config.fish ───────────────────────────────────────────────────────
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 mkdir -p "$HOME/.config/fish"
 ln -sf "$DOTFILES_DIR/config.fish" "$HOME/.config/fish/config.fish"
 
