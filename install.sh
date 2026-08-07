@@ -31,6 +31,9 @@ defaults import com.lwouis.alt-tab-macos "$DOTFILES_DIR/com.lwouis.alt-tab-macos
 killall AltTab 2>/dev/null || true
 open -a AltTab
 
+# ── iTerm2: apply profile + Catppuccin Macchiato/Latte colors ─────────────────
+bash "$DOTFILES_DIR/iterm2/apply-profile.sh"
+
 # ── Rectangle: import exported settings ───────────────────────────────────────
 jq -r '.defaults | to_entries[] | select(.value | length > 0) | "\(.key)\t\(.value | keys[0])\t\(.value | .[keys[0]])"' "$DOTFILES_DIR/RectangleConfig.json" | \
 while IFS=$'\t' read -r key type value; do
