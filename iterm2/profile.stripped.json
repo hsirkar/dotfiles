@@ -14,7 +14,7 @@
   "Custom Directory": "No",
   "Default Bookmark": "No",
   "Description": "Default",
-  "Disable Window Resizing": true,
+  "Disable Window Resizing": false,
   "Flashing Bell": false,
   "Guid": "45EA094D-D9EF-4136-BAB4-99A9B346AE46",
   "Horizontal Spacing": 1,

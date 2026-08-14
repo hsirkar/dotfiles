@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Applies profile.stripped.json to iTerm2 as a Dynamic Profile, with
-# Catppuccin Macchiato (dark) and Latte (light) colors merged in.
+# Gruvbox Dark and Gruvbox Light colors merged in.
 set -e
 
 ITERM2_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DYNAMIC_PROFILES_DIR="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
-DARK_COLORS_URL="https://raw.githubusercontent.com/catppuccin/iterm/main/colors/catppuccin-macchiato.itermcolors"
-LIGHT_COLORS_URL="https://raw.githubusercontent.com/catppuccin/iterm/main/colors/catppuccin-latte.itermcolors"
+DARK_COLORS_URL="https://raw.githubusercontent.com/mbadolato/iTerm2-Color-Schemes/master/schemes/Gruvbox%20Dark.itermcolors"
+LIGHT_COLORS_URL="https://raw.githubusercontent.com/mbadolato/iTerm2-Color-Schemes/master/schemes/Gruvbox%20Light.itermcolors"
 
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -30,4 +30,4 @@ jq -n \
 GUID=$(jq -r '.Guid' "$ITERM2_DIR/profile.stripped.json")
 defaults write com.googlecode.iterm2 "Default Bookmark Guid" -string "$GUID"
 
-echo "applied iTerm2 profile with Catppuccin Macchiato (dark) / Latte (light), set as default"
+echo "applied iTerm2 profile with Gruvbox Dark / Light, set as default"

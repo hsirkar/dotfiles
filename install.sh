@@ -59,6 +59,10 @@ ln -sf "$DOTFILES_DIR/config.fish" "$HOME/.config/fish/config.fish"
 # ── Symlink tmux.conf ─────────────────────────────────────────────────────────
 ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 
+# ── Symlink nvim config ───────────────────────────────────────────────────────
+mkdir -p "$HOME/.config"
+ln -sf "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
+
 # ── Claude Code ───────────────────────────────────────────────────────────────
 curl -fsSL https://claude.ai/install.sh | bash
 
