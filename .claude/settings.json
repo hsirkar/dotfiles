@@ -3,10 +3,41 @@
     "defaultMode": "auto"
   },
   "model": "sonnet",
+  "spinnerVerbs": {
+    "mode": "replace",
+    "verbs": ["Working"]
+  },
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh"
   },
   "tui": "fullscreen",
-  "theme": "auto"
+  "theme": "auto",
+  "autoMode": {
+    "environment": [
+      "### Org-wide",
+      "**Organization**: None configured",
+      "**Cloud provider(s)**: None configured",
+      "**Repository visibility**: assume private unless the remote host and repo name indicate otherwise, or a visibility check in the transcript shows public (gh visibility check was not queryable here for hsirkar/dotfiles)",
+      "**Internal sharing / snippet hosting**: None configured — treat public paste/gist services as outside the trust boundary",
+      "**Secrets management**: None configured",
+      "**Default / protected branches**: main (default); protected-branch/ruleset status not queryable here",
+      "**CI/CD deploy targets**: None configured",
+      "**Network posture**: None configured",
+      "**Source control**: The trusted repo (github.com:hsirkar/dotfiles.git) and its remote(s) only — no additional orgs configured",
+      "**Trusted internal domains**: None configured",
+      "**Trusted cloud buckets**: None configured",
+      "**Key internal services**: None configured",
+      "**Internal package registry**: None configured",
+      "**Sensitive data locations & audiences**: any file or store holding personal data, confidential business data, credentials, regulated data, or similarly sensitive material; preserve exact handles when known and share only with audiences cleared at the [named+specifics] bar — note: .env files found under several sibling project directories (e.g. cartoon-nyc-google-tiles/.env, cartoon-nyc-mapbox/.env, challenge-app/challenge-expo/.env, driving-game/.env, home-server/.env, jarvis/.env, playground/URS/.env, racoon/.env, realtime-voice-demo/.env, third-space/third-space-expo/.env, trade-studio/app/.env) — treat these as sensitive-data locations, not confirmed as part of the trusted repo",
+      "**Data retention / declassification**: None configured",
+      "**Sensitive remote targets**: any namespace, host, or container whose name carries `prod` or `production` as a whole word or name segment (hyphen/underscore/dot-delimited — e.g. matches `prod-db`, not `producer`)",
+      "**Protected deployment namespaces / environments**: None configured — fall back to the Sensitive remote targets heuristic",
+      "**Protected IaC scopes**: IAM, RBAC, networking, quota, and node-pool resources; anything whose name or tag carries `prod` or `production` as a whole word or name segment",
+      "### User-specific",
+      "**Primary use of Claude Code**: software development",
+      "**Trusted repo**: github.com:hsirkar/dotfiles.git (the working directory's repo and its configured remote) — visibility not queryable here, treat as private by default; other project directories found alongside it (e.g. cartoon-nyc-google-tiles, challenge-app, driving-game, home-server, jarvis, playground/URS, racoon, realtime-voice-demo, third-space, trade-studio) are separate, unverified checkouts, not part of this trusted repo",
+      "**Org-specific CLIs**: None configured"
+    ]
+  }
 }
