@@ -13,6 +13,10 @@ alias la='lsd -a'
 alias lla='lsd -la'
 alias lt='lsd --tree'
 alias vi='nvim'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
 
 # ── tmux ──────────────────────────────────────────────────────────────────────
 function tm

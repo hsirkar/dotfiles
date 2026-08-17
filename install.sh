@@ -18,7 +18,7 @@ brew install --cask --force \
   iterm2 alt-tab rectangle hiddenbar google-chrome firefox \
   obsidian postman unnaturalscrollwheels \
   windscribe spotify qbittorrent docker vlc minecraft \
-  font-jetbrains-mono-nerd-font
+  font-jetbrains-mono-nerd-font monitorcontrol
 
 # ── Startup apps (login items) ────────────────────────────────────────────────
 for app in "Rectangle" "AltTab" "UnnaturalScrollWheels" "Hidden Bar"; do
