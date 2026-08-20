@@ -39,6 +39,7 @@
   "Scrollback Lines": 1000,
   "Send Code When Idle": false,
   "Shortcut": "",
+  "Show Mark Indicators": false,
   "Silence Bell": false,
   "Sync Title": false,
   "Tags": [],
