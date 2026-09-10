@@ -3,6 +3,9 @@ set -e
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# ── macOS: only show scrollbars while scrolling ───────────────────────────────
+defaults write NSGlobalDomain AppleShowScrollBars -string "WhenScrolling"
+
 # ── Homebrew ──────────────────────────────────────────────────────────────────
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
