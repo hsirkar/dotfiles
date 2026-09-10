@@ -3,15 +3,17 @@
     "defaultMode": "auto"
   },
   "model": "sonnet",
-  "spinnerVerbs": {
-    "mode": "replace",
-    "verbs": ["Working"]
-  },
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh"
   },
-  "tui": "fullscreen",
+  "spinnerVerbs": {
+    "mode": "replace",
+    "verbs": [
+      "Working"
+    ]
+  },
+  "tui": "default",
   "theme": "auto",
   "autoMode": {
     "environment": [

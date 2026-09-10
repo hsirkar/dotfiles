@@ -70,3 +70,24 @@ mkdir -p "$HOME/.claude"
 ln -sf "$DOTFILES_DIR/.claude/settings.json" "$HOME/.claude/settings.json"
 ln -sf "$DOTFILES_DIR/.claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 ln -sf "$DOTFILES_DIR/.claude/statusline-command.sh" "$HOME/.claude/statusline-command.sh"
+
+# ── Agent skills ──────────────────────────────────────────────────────────────
+# Keep portable skills in this repository and expose each one through the
+# user-level discovery directory expected by Codex and Claude Code.
+mkdir -p "$HOME/.agents/skills" "$HOME/.claude/skills"
+
+for skill_dir in "$DOTFILES_DIR"/skills/*/; do
+  [ -f "${skill_dir}SKILL.md" ] || continue
+
+  skill_name="$(basename "$skill_dir")"
+  for skills_home in "$HOME/.agents/skills" "$HOME/.claude/skills"; do
+    skill_link="$skills_home/$skill_name"
+
+    if [ -e "$skill_link" ] && [ ! -L "$skill_link" ]; then
+      echo "Skipping $skill_link: path exists and is not a symlink"
+      continue
+    fi
+
+    ln -sfn "$skill_dir" "$skill_link"
+  done
+done

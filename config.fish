@@ -16,9 +16,4 @@ alias vi='nvim'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
-
-
-# ── tmux ──────────────────────────────────────────────────────────────────────
-function tm
-    tmux new-session -A -s default
-end
+alias tm='tmux -CC new-session -A -s default'
