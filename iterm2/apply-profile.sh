@@ -31,3 +31,22 @@ GUID=$(jq -r '.Guid' "$ITERM2_DIR/profile.stripped.json")
 defaults write com.googlecode.iterm2 "Default Bookmark Guid" -string "$GUID"
 
 echo "applied iTerm2 profile with Gruvbox Dark / Light, set as default"
+
+# ── iTerm2: general preferences ────────────────────────────────────────────
+# tmux: bury the client session after attaching, don't use a dedicated
+# "tmux" profile, and open unrecognized/new tmux windows as tabs in a new
+# window (rather than as separate windows).
+defaults write com.googlecode.iterm2 AutoHideTmuxClientSession -bool true
+defaults write com.googlecode.iterm2 TmuxUsesDedicatedProfile -bool false
+defaults write com.googlecode.iterm2 OpenTmuxWindowsIn -int 1
+
+# Appearance > Panes: no per-pane title bar on splits.
+defaults write com.googlecode.iterm2 ShowPaneTitles -bool false
+
+# General > Selection: clicking a command doesn't restrict Find/Filter to it.
+defaults write com.googlecode.iterm2 ClickToSelectCommand -bool false
+
+# Keys: leader key is Ctrl-a.
+defaults write com.googlecode.iterm2 Leader -string "0x61-0x40000-0x0"
+
+echo "applied iTerm2 general preferences"
