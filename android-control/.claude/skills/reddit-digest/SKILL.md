@@ -21,6 +21,32 @@ Helper script: `scripts/dump.py` (in this skill's directory), two modes:
 - `dump.py feed <xml>` → prints one line per post card: `tap_x  tap_y  POST|AD  <summary text>`
 - `dump.py post <xml>` → prints the readable strings from an open post/comments screen, in order
 
+## Fast path: standalone collector (no agent loop)
+
+For the common case (scan N posts on the current feed, comments included), the
+whole loop below can run unattended via `scripts/collect_digest.py` — it drives
+adb directly with no LLM round-trips per step, and writes structured JSON. Use
+this instead of the manual loop whenever the user just wants the raw material
+collected; read the resulting JSON afterward and write the actual digest yourself.
+
+```bash
+python3 <skill_dir>/scripts/collect_digest.py \
+  --count 5 \
+  --out "$SCRATCHPAD/reddit-digest/digest.json" \
+  --workdir "$SCRATCHPAD/reddit-digest/scratch"
+```
+
+Each entry in the output JSON is `{"feed_summary": ..., "detail_lines": [...],
+"status": "ok" | "tap_failed"}`. `tap_failed` means the script verified (via
+`is_post_detail`) that tapping the post's header didn't open a real post-detail
+screen even after one retry — in that case only the feed-preview text is
+available, and you should say so rather than inventing comment content for it.
+
+The manual step-by-step loop (2.1–2.6 below) is still the right tool when: the
+user wants to watch it happen turn-by-turn, the feed layout/resolution is unusual
+enough that the fixed swipe/tap logic needs a human-in-the-loop judgment call, or
+`collect_digest.py` needs debugging.
+
 ## 0. Setup
 
 Check a device is connected and authorized:
