@@ -9,7 +9,8 @@ Optimize for a playable idea and cheap subsequent adjustments.
 
 - Default to **Babylon.js (`@babylonjs/core`) + TypeScript + Vite**, with npm and a lockfile. Follow an existing project's package manager.
 - Use Babylon's meshes, materials, lighting, scene graph, camera APIs, and render loop. Avoid custom WebGL renderers, shader infrastructure, or a homegrown engine.
-- Start with primitive geometry and simple kinematic movement. Add Havok only when the game needs rigid-body interactions; ordinary movement does not require it.
+- Before creating 3D art, examine [Kenney's kits](https://kenney.nl/assets) for models that fit the game's theme and visual style. Prefer suitable kit assets over generating custom 3D models; use primitives or custom geometry only for missing pieces or an intentional visual requirement. Import only the assets needed, preferably glTF/GLB, and retain the source URL and license.
+- Use simple kinematic movement initially. Add Havok only when the game needs rigid-body interactions; ordinary movement does not require it.
 - Keep one small scene and a few focused files: `main.ts`, `world.ts`, `player.ts`/`flight.ts`, `camera.ts`, and `input.ts` as needed. Avoid React, ECS, generic managers, and abstraction layers unless the prototype benefits from them.
 - Put frequently adjusted speeds, acceleration, camera offsets, sensitivity, and world parameters in `config.ts`. Keep units explicit and movement frame-rate independent.
 - Implement the core playable loop first. Keep UI to essential controls and feedback; follow the user's visual direction.
