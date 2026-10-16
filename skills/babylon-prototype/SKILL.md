@@ -16,7 +16,9 @@ Optimize for a playable idea and cheap subsequent adjustments.
 - Keep one small scene and a few focused files: `main.ts`, `world.ts`, `player.ts`/`flight.ts`, `camera.ts`, and `input.ts` as needed. Avoid React, ECS, generic managers, and abstraction layers unless the prototype benefits from them.
 - Put frequently adjusted speeds, acceleration, camera offsets, sensitivity, and world parameters in `config.ts`. Keep units explicit and movement frame-rate independent.
 - Implement the core playable loop first. Keep UI to essential controls and feedback; follow the user's visual direction.
-- Preserve existing controls, camera behavior, and tuning during migrations unless asked to change them. Reset and loss of focus should clear held inputs. Mouse capture needs click-to-enter, Escape-to-release, and a touch alternative when relevant.
+- Match presentation to the requested mood; use cozy styling only when requested. Keep lighting readable and the palette cohesive. Make music and sound-effect levels separately tunable, with easy mute.
+- Drive related animation and sound from the same gameplay state. Use transitions between active, idle, and stopped states that suit the intended feel.
+- Preserve established controls, camera behavior, and tuning during migrations and visual/audio changes unless asked to change them. Make small tuning changes and keep a recoverable Git checkpoint before behavior experiments. Reset and loss of focus should clear held inputs. Mouse capture needs click-to-enter, Escape-to-release, and a touch alternative when relevant.
 - Provide `npm run dev`, `npm run check` (TypeScript), and `npm run build`. Record launch instructions and controls briefly in the project README.
 - After meaningful changes, typecheck and build; play the affected interaction in an available browser. Test movement/camera invariants when they are easy to regress. Avoid elaborate test scaffolding for disposable prototypes.
 - Make small, targeted edits. Read the relevant modules rather than the entire project for every adjustment.
