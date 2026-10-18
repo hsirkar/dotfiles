@@ -74,6 +74,10 @@ ln -sf "$DOTFILES_DIR/.claude/settings.json" "$HOME/.claude/settings.json"
 ln -sf "$DOTFILES_DIR/.claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
 ln -sf "$DOTFILES_DIR/.claude/statusline-command.sh" "$HOME/.claude/statusline-command.sh"
 
+# ── Codex: sandboxed execution with automatic approval review ──────────────────
+# Merge portable defaults while preserving local models, projects, and plugins.
+python3 "$DOTFILES_DIR/codex/install.py"
+
 # ── Agent skills ──────────────────────────────────────────────────────────────
 # Keep portable skills in this repository and expose each one through the
 # user-level discovery directory expected by Codex and Claude Code.
