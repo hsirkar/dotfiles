@@ -6,6 +6,8 @@ import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import type { Scene } from '@babylonjs/core/scene';
 import { MercatorCoordinate, type Map as LibreMap, type MapGeoJSONFeature } from 'maplibre-gl';
+import { bridgeDeckProfile } from './config';
+import { mapFeatures } from './local-map';
 
 type Line = number[][];
 type Span = { start: Vector3; end: Vector3; length: number };
@@ -39,7 +41,7 @@ function insideRing(p: Vector3, ring: Vector3[]) {
   return inside;
 }
 function riverSpan(map: LibreMap, start: Vector3, end: Vector3, local: (coordinate: number[]) => Vector3) {
-  const water = map.querySourceFeatures('openmaptiles', { sourceLayer: 'water' }).flatMap(polygons).map(polygon => polygon.map(ring => ring.map(local)));
+  const water = mapFeatures(map, 'water').flatMap(polygons).map(polygon => polygon.map(ring => ring.map(local)));
   const length = Vector3.Distance(start, end), samples = Math.ceil(length / 15);
   let first = Infinity, last = -Infinity;
   for (let i = 0; i <= samples; i++) {
@@ -55,7 +57,7 @@ function riverSpan(map: LibreMap, start: Vector3, end: Vector3, local: (coordina
 function outlineWidth(map: LibreMap, start: Vector3, end: Vector3, local: (coordinate: number[]) => Vector3) {
   const axis = end.subtract(start).normalize(), across = new Vector3(-axis.z, 0, axis.x);
   const length = Vector3.Distance(start, end), widths: number[] = [];
-  for (const feature of map.querySourceFeatures('openmaptiles', { sourceLayer: 'transportation', filter: ['==', ['get', 'class'], 'bridge'] })) {
+  for (const feature of mapFeatures(map, 'transportation').filter(feature => feature.properties.kind === 'bridge-outline')) {
     for (const polygon of polygons(feature)) {
       const points = polygon[0].map(local).map(p => ({ x: Vector3.Dot(p.subtract(start), axis), z: Vector3.Dot(p.subtract(start), across) }));
       for (const station of [.3, .5, .7]) {
@@ -74,8 +76,8 @@ function outlineWidth(map: LibreMap, start: Vector3, end: Vector3, local: (coord
   return widths.sort((a, b) => a - b)[Math.floor(widths.length / 2)];
 }
 
-// Retain and join tile-clipped road fragments, including when old tiles leave the viewport.
-// Names identify a bridge; only transportation features tagged brunnel=bridge supply its extent.
+// Retain complete OSM road ways as new local chunks enter the viewport.
+// Original bridge tags and names identify the modeled spans.
 export function createBridgeUpdater(scene: Scene, map: LibreMap, origin: MercatorCoordinate, scale: number) {
   const records = new Map<string, BridgeRecord>();
   const local = (coordinate: number[]) => {
@@ -85,13 +87,13 @@ export function createBridgeUpdater(scene: Scene, map: LibreMap, origin: Mercato
   const coordinate = (p: Vector3) => new MercatorCoordinate(origin.x + p.x * scale, origin.y - p.z * scale, 0).toLngLat().toArray();
   return () => {
     if (map.getZoom() < 12) return false;
-    const named = map.querySourceFeatures('openmaptiles', { sourceLayer: 'transportation_name' }).flatMap(feature => {
+    const named = mapFeatures(map, 'transportation_name').flatMap(feature => {
       const name = bridgeName(String(feature.properties.name || feature.properties.name_en || ''));
       if (!name) return [];
       return lines(feature).map(line => ({ name, points: line.map(local) }));
     });
     const dirty = new Set<string>();
-    const features = map.querySourceFeatures('openmaptiles', { sourceLayer: 'transportation', filter: ['==', ['get', 'brunnel'], 'bridge'] });
+    const features = mapFeatures(map, 'transportation').filter(feature => feature.properties.brunnel === 'bridge');
     for (const feature of features) {
       if (feature.properties.ramp || ['service', 'minor', 'transit'].includes(feature.properties.class)) continue;
       for (const line of lines(feature)) {
@@ -101,8 +103,8 @@ export function createBridgeUpdater(scene: Scene, map: LibreMap, origin: Mercato
         if (length < 15) continue;
         const midpoint = Vector3.Lerp(start, end, .5);
         const direction = end.subtract(start).normalize();
-        let name: string | undefined, closest = 32;
-        for (const label of named) {
+        let name = bridgeName(String(feature.properties.name || '')), closest = 32;
+        for (const label of name ? [] : named) {
           for (let i = 1; i < label.points.length; i++) {
             const labelDirection = label.points[i].subtract(label.points[i - 1]).normalize();
             if (Math.abs(Vector3.Dot(direction, labelDirection)) < .98) continue;
@@ -149,7 +151,8 @@ export function createBridgeUpdater(scene: Scene, map: LibreMap, origin: Mercato
       record.root?.dispose(false, true);
       record.root = buildModel(scene, name, start, end, width);
       record.length = length;
-      const info = { name, source: 'openmaptiles', sourceLayers: ['transportation', 'transportation_name', 'water'], start: coordinate(start), end: coordinate(end), lengthMeters: Vector3.Distance(start, end), sourceLengthMeters: length, tileSpanCount: cluster.count, widthMeters: width ?? null, widthSource: width ? 'vector-tile-bridge-outline' : 'approximate', laneCount: null, structuralDimensions: 'approximate', kind: name === 'Queensboro Bridge' ? 'cantilever' : /^(Brooklyn|Manhattan|Williamsburg|George Washington) Bridge$/.test(name) ? 'suspension' : 'girder' };
+      const profile = bridgeDeckProfile(name);
+      const info = { deckSurfaceMeters: profile.lowerSurfaceMeters, upperDeckSurfaceMeters: profile.upperSurfaceMeters, name, source: 'nyc-osm-snapshot', sourceLayers: ['roads', 'bridge-outlines', 'coastline-water'], geometrySpanCount: cluster.count, start: coordinate(start), end: coordinate(end), lengthMeters: Vector3.Distance(start, end), sourceLengthMeters: length, widthMeters: width ?? null, widthSource: width ? 'osm-bridge-outline' : 'approximate', laneCount: null, structuralDimensions: 'approximate', kind: name === 'Queensboro Bridge' ? 'cantilever' : /^(Brooklyn|Manhattan|Williamsburg|George Washington) Bridge$/.test(name) ? 'suspension' : 'girder' };
       scene.metadata = { ...scene.metadata, bridges: { ...scene.metadata?.bridges, [name]: info } };
       if (name === 'Queensboro Bridge') scene.metadata.bridge = info;
       changed = true;
@@ -158,7 +161,7 @@ export function createBridgeUpdater(scene: Scene, map: LibreMap, origin: Mercato
   };
 }
 
-// Map tiles encode alignment, not tower locations, deck clearances or engineering profiles.
+// OSM geometry supplies alignment; missing tower positions, clearances and profiles remain estimates.
 // These lightweight silhouettes are intentionally approximate and use Babylon mesh geometry.
 function buildModel(scene: Scene, name: string, start: Vector3, end: Vector3, width?: number) {
   const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -191,8 +194,9 @@ function buildModel(scene: Scene, name: string, start: Vector3, end: Vector3, wi
   };
   const cantilever = name === 'Queensboro Bridge';
   const suspension = /^(Brooklyn|Manhattan|Williamsburg|George Washington) Bridge$/.test(name);
-  const deck = name === 'George Washington Bridge' ? 65 : (cantilever || suspension) ? 43 : 14;
-  const upper = deck + 10;
+  const profile = bridgeDeckProfile(name);
+  const deck = profile.lowerCenterMeters;
+  const upper = profile.upperCenterMeters ?? deck + 10;
   const halfWidth = width ? width / 2 : name === 'George Washington Bridge' ? 17 : /Wards Island|High Bridge/.test(name) ? 4 : 13.5;
   box('lower-deck', new Vector3(length / 2, deck, 0), new Vector3(length, 2.5, halfWidth * 2), asphalt);
   if (cantilever || name === 'George Washington Bridge') box('upper-deck', new Vector3(length / 2, upper, 0), new Vector3(length, 1.7, 18), asphalt);
@@ -258,7 +262,7 @@ function buildModel(scene: Scene, name: string, start: Vector3, end: Vector3, wi
       }
     }
   } else {
-    // Tile data contains no structural type: render a conservative deck and piers.
+    // Unclassified bridge: render a conservative deck and piers.
     const pierCount = Math.max(1, Math.ceil(length / 110));
     for (let i = 0; i <= pierCount; i++) pier(i / pierCount);
   }

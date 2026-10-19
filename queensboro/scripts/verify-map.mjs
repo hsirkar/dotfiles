@@ -32,24 +32,60 @@ try {
   });
   expect(bridge.lengthMeters).toBeGreaterThan(800);
   expect(bridge.lengthMeters).toBeLessThan(1500);
-  expect(bridge.tileSpanCount).toBeGreaterThan(0);
+  expect(bridge.geometrySpanCount).toBeGreaterThan(0);
   expect(bridge.vertices).toBeGreaterThan(1000);
   expect(bridge.ready).toBe(true);
-  expect(bridge.widthSource).toBe('vector-tile-bridge-outline');
+  expect(bridge.widthSource).toBe('osm-bridge-outline');
   expect(bridge.laneCount).toBe(null);
   expect(await page.evaluate(() => window.__atlasScene.materials.some(m => m.name === 'bridge-markings'))).toBe(false);
   expect(bridge.start[0]).toBeLessThan(bridge.end[0]);
   expect(bridge.start[1]).toBeGreaterThan(bridge.end[1]);
-  console.log('PASS: Babylon Queensboro truss built from vector tile geometry', JSON.stringify(bridge));
+  console.log('PASS: Babylon Queensboro truss built from snapshot geometry', JSON.stringify(bridge));
+  await page.waitForFunction(() => window.__atlasScene.metadata?.roads?.featureCount > 100);
+  const roads = await page.evaluate(() => {
+    const scene = window.__atlasScene, mesh = scene.getMeshByName('tile-roads');
+    const positions = mesh.getVerticesData('position');
+    return { ...scene.metadata.roads, vertices: mesh.getTotalVertices(), ready: mesh.isReady(), finite: positions.every(Number.isFinite), minHeight: Math.min(...positions.filter((_, i) => i % 3 === 1)), maxHeight: Math.max(...positions.filter((_, i) => i % 3 === 1)) };
+  });
+  expect(roads.ready).toBe(true);
+  expect(roads.finite).toBe(true);
+  expect(roads.segmentCount).toBeGreaterThan(100);
+  expect(roads.vertices).toBeGreaterThan(1000);
+  expect(roads.minHeight).toBeGreaterThan(0);
+  expect(roads.maxHeight).toBeGreaterThan(roads.minHeight + 10);
+  expect(roads.laneCount).toBe(null);
+  console.log('PASS: Babylon road surfaces from transportation polylines', JSON.stringify(roads));
   await page.screenshot({ path: 'artifacts/map-desktop.png' });
   await expect(page.locator('#map')).toHaveCount(1);
-  expect(await page.evaluate(() => window.__atlasMap.getStyle().layers.some(layer => layer.type === 'fill-extrusion'))).toBe(false);
+  expect(await page.evaluate(() => window.__atlasMap.getStyle().layers.some(layer => layer.type === 'fill-extrusion'))).toBe(true);
+  await page.evaluate(() => {
+    const scene = window.__atlasScene, instrumented = new WeakSet();
+    window.__roadFrames = [];
+    let draws = 0;
+    scene.onBeforeRenderObservable.add(() => {
+      draws = 0;
+      for (const mesh of scene.meshes.filter(mesh => mesh.name === 'tile-roads')) {
+        if (!instrumented.has(mesh)) {
+          instrumented.add(mesh);
+          mesh.onBeforeDrawObservable.add(() => draws++);
+        }
+      }
+    });
+    scene.onAfterRenderObservable.add(() => window.__roadFrames.push({ draws, moving: window.__atlasMap.isMoving() }));
+    window.__atlasMap.triggerRepaint();
+  });
+  await page.waitForFunction(() => window.__roadFrames.some(frame => frame.draws > 0));
+  expect(roads.roadClasses).toContain('path');
   const initial = await state();
   await page.mouse.move(900, 500);
   await page.mouse.down();
   await page.mouse.move(1060, 570, { steps: 15 });
   await page.mouse.up();
   await expect.poll(async () => (await state()).center).not.toEqual(initial.center);
+  const panFrames = await page.evaluate(() => window.__roadFrames.filter(frame => frame.moving));
+  expect(panFrames.length).toBeGreaterThan(3);
+  expect(panFrames.every(frame => frame.draws > 0)).toBe(true);
+  console.log(`PASS: road draw calls persisted through ${panFrames.length} panning frames`);
   await page.mouse.wheel(0, -450);
   await expect.poll(async () => (await state()).zoom).toBeGreaterThan(initial.zoom + 0.2);
   const beforeTilt = await state();
@@ -59,7 +95,7 @@ try {
   await page.mouse.up({ button: 'right' });
   await expect.poll(async () => (await state()).pitch).not.toEqual(beforeTilt.pitch);
   await expect.poll(async () => (await state()).bearing).not.toEqual(beforeTilt.bearing);
-  console.log('PASS: desktop tiles, Babylon layer, full-screen canvas, no custom UI, pan, zoom, tilt, rotation');
+  console.log('PASS: local snapshot, Babylon layer, full-screen canvas, no custom UI, pan, zoom, tilt, rotation');
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator('.maplibregl-canvas')).toHaveJSProperty('clientWidth', 390);
   await expect(page.locator('.maplibregl-canvas')).toHaveJSProperty('clientHeight', 844);
@@ -74,19 +110,27 @@ try {
   ];
   for (const [name, center] of crossings) {
     await page.evaluate(center => window.__atlasMap.jumpTo({ center, zoom: 15.2, pitch: 58, bearing: -26 }), center);
-    await page.waitForFunction(name => window.__atlasMap.loaded() && !!window.__atlasScene.metadata?.bridges?.[name], name, { timeout: 30000 });
+    await page.waitForFunction(name => window.__atlasMap.loaded() && !!window.__atlasScene.metadata?.bridges?.[name], name, { timeout: 90000 });
     const info = await page.evaluate(name => window.__atlasScene.metadata.bridges[name], name);
-    expect(info.widthSource).toBe('vector-tile-bridge-outline');
+    expect(info.widthSource).toBe('osm-bridge-outline');
     expect(info.laneCount).toBe(null);
     expect(info.lengthMeters).toBeGreaterThan(100);
     await page.screenshot({ path: `artifacts/${name.toLowerCase().replaceAll(' ', '-')}.png` });
-    console.log(`PASS: ${name}, tile-derived alignment and outline width, no invented lane count`);
+    console.log(`PASS: ${name}, snapshot-derived alignment and outline width, no invented lane count`);
   }
+  expect(await page.evaluate(() => window.__atlasScene.meshes.filter(mesh => mesh.name === 'tile-roads').length)).toBe(1);
   // Returning to a crossing must retain one model, rather than duplicate it per tile load.
   await page.evaluate(() => window.__atlasMap.jumpTo({ center: [-73.9546, 40.7569], zoom: 15.2, pitch: 58, bearing: -26 }));
   await page.waitForFunction(() => window.__atlasMap.loaded());
   expect(await page.evaluate(() => window.__atlasScene.transformNodes.filter(node => node.name === 'queensboro-bridge').length)).toBe(1);
   await page.screenshot({ path: 'artifacts/map-desktop.png' });
+  await page.evaluate(() => window.__atlasMap.jumpTo({ zoom: 13 }));
+  await page.waitForFunction(() => window.__atlasMap.loaded() && window.__atlasScene.getMeshByName('tile-roads')?.isReady());
+  expect(await page.evaluate(() => window.__atlasScene.metadata.roads.featureCount)).toBeGreaterThan(0);
+  await page.evaluate(() => window.__atlasMap.jumpTo({ zoom: 15.2 }));
+  await page.waitForFunction(() => window.__atlasMap.loaded() && window.__atlasScene.metadata?.roads?.featureCount > 100);
+  await page.screenshot({ path: 'artifacts/map-desktop.png' });
+  console.log('PASS: all road/path classes update while navigating, remain batched, and render below zoom 14');
   expect(errors).toEqual([]);
   expect(failedRequests).toEqual([]);
   console.log('PASS: mobile canvas sizing, no JavaScript/WebGL errors, no failed network requests');

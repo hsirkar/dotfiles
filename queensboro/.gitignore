@@ -2,3 +2,8 @@ node_modules/
 dist/
 .DS_Store
 artifacts/
+data/osm/
+public/nyc-buildings/
+public/nyc-map/
+.venv-osm/
+__pycache__/

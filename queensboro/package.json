@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "cache:nyc": "python3 scripts/cache-nyc-buildings.py",
+    "cache:map": ".venv-osm/bin/python scripts/cache-nyc-map.py",
+    "verify:nyc": "node scripts/verify-nyc-cache.mjs",
+    "verify:local": "node scripts/verify-local-map.mjs",
     "dev": "vite --host 0.0.0.0",
     "check": "tsc --noEmit",
     "build": "tsc --noEmit && vite build",
@@ -12,7 +16,8 @@
   },
   "dependencies": {
     "@babylonjs/core": "^8.0.0",
-    "maplibre-gl": "^6.15.0"
+    "maplibre-gl": "^6.15.0",
+    "polygon-clipping": "^0.15.7"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",

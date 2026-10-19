@@ -11,17 +11,21 @@ import '@babylonjs/core/Shaders/default.fragment';
 import { MercatorCoordinate, type CustomLayerInterface } from 'maplibre-gl';
 import { PLACES } from './config';
 import { createBridgeUpdater } from './bridge';
+import { createRoadUpdater } from './roads';
 
 // Share MapLibre's WebGL context and transform a small, metre-based Babylon scene.
 export function createPlacesLayer(): CustomLayerInterface {
   let engine: Engine, scene: Scene, camera: Camera;
-  let stopBridgeUpdates = () => {};
+  let stopWorldUpdates = () => {};
+  let settlingFrames = 0;
+  let mapRepaint = () => {};
   const origin = MercatorCoordinate.fromLngLat(PLACES[0].coordinates);
   const scale = origin.meterInMercatorCoordinateUnits();
   const world = Matrix.Compose(new Vector3(scale, scale, scale), Quaternion.FromEulerAngles(Math.PI / 2, 0, 0), new Vector3(origin.x, origin.y, origin.z));
   return {
     id: 'babylon-places', type: 'custom', renderingMode: '3d',
     onAdd(_map, gl) {
+      mapRepaint = () => _map.triggerRepaint();
       engine = new Engine(gl, true, { useHighPrecisionMatrix: true }, true);
       // Avoid competing with MapLibre for shared WebGL uniform buffer bindings.
       engine.disableUniformBuffers = true;
@@ -52,18 +56,53 @@ export function createPlacesLayer(): CustomLayerInterface {
       });
       if (import.meta.env.DEV) Object.assign(window, { __atlasScene: scene });
       const updateBridges = createBridgeUpdater(scene, _map, origin, scale);
-      const tryBridge = () => {
-        if (scene.isDisposed) return;
-        if (updateBridges()) scene.executeWhenReady(() => _map.triggerRepaint());
+      const updateRoads = createRoadUpdater(scene, _map, origin, scale);
+      const repaint = () => {
+        settlingFrames = 3;
+        _map.triggerRepaint();
+        scene.executeWhenReady(() => _map.triggerRepaint());
       };
-      _map.on('idle', tryBridge);
-      stopBridgeUpdates = () => _map.off('idle', tryBridge);
+      let worldDirty = true;
+      let updateTimer: ReturnType<typeof setTimeout> | undefined;
+      const updateWorld = () => {
+        if (scene.isDisposed || !worldDirty || _map.isMoving()) return;
+        clearTimeout(updateTimer);
+        updateTimer = undefined;
+        worldDirty = false;
+        const bridgesChanged = updateBridges();
+        const roadsChanged = updateRoads();
+        if (roadsChanged || bridgesChanged) repaint();
+      };
+      const scheduleUpdate = () => {
+        worldDirty = true;
+        clearTimeout(updateTimer);
+        // Retain the existing mesh during gestures. Batch local chunk arrivals instead
+        // of repeatedly rebuilding the graph on the input/rendering thread.
+        if (!_map.isMoving()) updateTimer = setTimeout(updateWorld, 180);
+      };
+      const sourceUpdate = (event: { sourceId?: string; sourceDataType?: string }) => {
+        if (event.sourceId === 'nyc-detail' && event.sourceDataType !== 'visibility') scheduleUpdate();
+      };
+      _map.on('idle', updateWorld);
+      _map.on('sourcedata', sourceUpdate);
+      _map.on('moveend', scheduleUpdate);
+      stopWorldUpdates = () => {
+        _map.off('idle', updateWorld);
+        _map.off('sourcedata', sourceUpdate);
+        _map.off('moveend', scheduleUpdate);
+        clearTimeout(updateTimer);
+      };
       scene.executeWhenReady(() => _map.triggerRepaint());
     },
     render(_gl, args) {
       camera.freezeProjectionMatrix(world.multiply(Matrix.FromArray(args.defaultProjectionData.mainMatrix)));
       scene.render(false);
+      // New geometry/materials need a frame immediately, then another after shader compilation.
+      if (settlingFrames > 0 || !scene.isReady()) {
+        settlingFrames = Math.max(0, settlingFrames - 1);
+        mapRepaint();
+      }
     },
-    onRemove() { stopBridgeUpdates(); scene?.dispose(); engine?.dispose(); },
+    onRemove() { stopWorldUpdates(); scene?.dispose(); engine?.dispose(); },
   };
 }
