@@ -10,11 +10,11 @@ import '@babylonjs/core/Shaders/default.vertex';
 import '@babylonjs/core/Shaders/default.fragment';
 import { MercatorCoordinate, type CustomLayerInterface } from 'maplibre-gl';
 import { PLACES } from './config';
-import { createBridgeUpdater } from './bridge';
-import { createRoadUpdater } from './roads';
+import { attachPrecomputedWorld } from './precomputed-world';
+import type { TileManifest } from './tile-data';
 
 // Share MapLibre's WebGL context and transform a small, metre-based Babylon scene.
-export function createPlacesLayer(): CustomLayerInterface {
+export function createPlacesLayer(manifest: TileManifest): CustomLayerInterface {
   let engine: Engine, scene: Scene, camera: Camera;
   let stopWorldUpdates = () => {};
   let settlingFrames = 0;
@@ -55,43 +55,12 @@ export function createPlacesLayer(): CustomLayerInterface {
         ring.position.set(x, 2, z); ring.material = orange;
       });
       if (import.meta.env.DEV) Object.assign(window, { __atlasScene: scene });
-      const updateBridges = createBridgeUpdater(scene, _map, origin, scale);
-      const updateRoads = createRoadUpdater(scene, _map, origin, scale);
       const repaint = () => {
         settlingFrames = 3;
         _map.triggerRepaint();
         scene.executeWhenReady(() => _map.triggerRepaint());
       };
-      let worldDirty = true;
-      let updateTimer: ReturnType<typeof setTimeout> | undefined;
-      const updateWorld = () => {
-        if (scene.isDisposed || !worldDirty || _map.isMoving()) return;
-        clearTimeout(updateTimer);
-        updateTimer = undefined;
-        worldDirty = false;
-        const bridgesChanged = updateBridges();
-        const roadsChanged = updateRoads();
-        if (roadsChanged || bridgesChanged) repaint();
-      };
-      const scheduleUpdate = () => {
-        worldDirty = true;
-        clearTimeout(updateTimer);
-        // Retain the existing mesh during gestures. Batch local chunk arrivals instead
-        // of repeatedly rebuilding the graph on the input/rendering thread.
-        if (!_map.isMoving()) updateTimer = setTimeout(updateWorld, 180);
-      };
-      const sourceUpdate = (event: { sourceId?: string; sourceDataType?: string }) => {
-        if (event.sourceId === 'nyc-detail' && event.sourceDataType !== 'visibility') scheduleUpdate();
-      };
-      _map.on('idle', updateWorld);
-      _map.on('sourcedata', sourceUpdate);
-      _map.on('moveend', scheduleUpdate);
-      stopWorldUpdates = () => {
-        _map.off('idle', updateWorld);
-        _map.off('sourcedata', sourceUpdate);
-        _map.off('moveend', scheduleUpdate);
-        clearTimeout(updateTimer);
-      };
+      stopWorldUpdates = attachPrecomputedWorld(scene, _map, manifest, repaint);
       scene.executeWhenReady(() => _map.triggerRepaint());
     },
     render(_gl, args) {

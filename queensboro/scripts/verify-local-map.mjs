@@ -1,7 +1,7 @@
 import { chromium, expect } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, args: process.env.MAP_GPU === 'metal' ? ['--use-angle=metal'] : [] });
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 const page = await context.newPage();
 const external = [], errors = [];
@@ -19,7 +19,7 @@ try {
   await page.goto(process.env.MAP_URL || 'http://localhost:8080/');
   await page.waitForFunction(() => {
     const map = window.__atlasMap;
-    return map?.getLayer('buildings-3d') && map.loaded() && map.queryRenderedFeatures({ layers: ['buildings-3d'] }).length > 10 && window.__atlasScene?.metadata?.bridge;
+    return map?.getLayer('buildings-3d') && map.loaded() && map.queryRenderedFeatures({ layers: ['buildings-3d'] }).length > 10 && window.__atlasScene?.getMeshByName('queensboro-bridge-bridge-steel')?.isReady();
   }, null, { timeout: 120000 });
   await page.waitForFunction(() => window.__atlasMap.queryRenderedFeatures({ layers: ['place-labels', 'road-labels'] }).length > 0);
   const state = await page.evaluate(() => {
@@ -30,7 +30,7 @@ try {
       labels: map.queryRenderedFeatures({ layers: ['place-labels', 'road-labels'] }).length,
       bridge: window.__atlasScene.metadata.bridge, approaches: window.__atlasScene.metadata.roads };
   });
-  expect(state.sources.every(type => type === 'geojson')).toBe(true);
+  expect(state.sources.every(type => type === 'vector')).toBe(true);
   expect(state.roads).toBeGreaterThan(100);
   expect(state.land).toBeGreaterThan(0);
   expect(state.labels).toBeGreaterThan(0);
@@ -51,10 +51,11 @@ try {
     }
   });
   await expect(page.locator('.building-inspector-osm > a')).toHaveAttribute('href', click);
+  await expect(page.locator('.building-inspector-osm h3')).toContainText('OSM tags');
   await page.evaluate(() => window.__atlasMap.jumpTo({ center: [-73.9967, 40.706], zoom: 15, pitch: 50, bearing: -15 }));
   await page.waitForFunction(() => {
     const map = window.__atlasMap;
-    return map.loaded() && map.queryRenderedFeatures({ layers: ['local-roads'] }).length > 100 && window.__atlasScene.metadata.bridges?.['Brooklyn Bridge'];
+    return map.loaded() && map.queryRenderedFeatures({ layers: ['local-roads'] }).length > 100 && window.__atlasScene.getMeshByName('brooklyn-bridge-bridge-steel')?.isReady();
   }, null, { timeout: 60000 });
   await page.screenshot({ path: 'artifacts/local-map-brooklyn.png' });
   await page.evaluate(() => window.__atlasMap.jumpTo({ center: [-73.98, 40.74], zoom: 11, pitch: 0, bearing: 0 }));
@@ -64,6 +65,7 @@ try {
   await page.evaluate(() => window.__atlasMap.jumpTo({ center: [-73.9546, 40.7569], zoom: 15.2, pitch: 58, bearing: -26 }));
   await page.waitForFunction(() => window.__atlasMap.loaded() && window.__atlasMap.queryRenderedFeatures({ layers: ['buildings-3d'] }).length > 10);
   await page.screenshot({ path: 'artifacts/local-map-mobile.png' });
+  expect((await page.evaluate(() => window.__atlasScene.metadata.world.mode))).toBe('precomputed');
   expect(external).toEqual([]);
   expect(errors).toEqual([]);
   console.log('PASS: local land/water, roads, labels, buildings, bridges/approaches, pan/zoom, mobile; zero external requests/errors', JSON.stringify(state));

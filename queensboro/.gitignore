@@ -5,5 +5,6 @@ artifacts/
 data/osm/
 public/nyc-buildings/
 public/nyc-map/
+public/nyc-tiles/
 .venv-osm/
 __pycache__/

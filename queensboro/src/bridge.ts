@@ -7,7 +7,7 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import type { Scene } from '@babylonjs/core/scene';
 import { MercatorCoordinate, type Map as LibreMap, type MapGeoJSONFeature } from 'maplibre-gl';
 import { bridgeDeckProfile } from './config';
-import { mapFeatures } from './local-map';
+import { mapFeatures } from './world-input';
 
 type Line = number[][];
 type Span = { start: Vector3; end: Vector3; length: number };

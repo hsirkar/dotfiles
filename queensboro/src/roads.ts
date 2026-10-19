@@ -6,7 +6,7 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import type { Scene } from '@babylonjs/core/scene';
 import { MercatorCoordinate, type Map as LibreMap } from 'maplibre-gl';
 import { ROAD_RENDERING, BRIDGE_APPROACHES } from './config';
-import { mapFeatures } from './local-map';
+import { mapFeatures } from './world-input';
 import { raiseBridgeApproaches, type BridgeDeck, type RoadPath } from './approaches';
 
 // Exclude non-road transport, rather than maintaining an incomplete road whitelist.

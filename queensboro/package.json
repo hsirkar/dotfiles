@@ -4,23 +4,24 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "cache:nyc": "python3 scripts/cache-nyc-buildings.py",
-    "cache:map": ".venv-osm/bin/python scripts/cache-nyc-map.py",
+    "tiles:build": ".venv-osm/bin/python scripts/tiles/build.py",
     "verify:nyc": "node scripts/verify-nyc-cache.mjs",
     "verify:local": "node scripts/verify-local-map.mjs",
     "dev": "vite --host 0.0.0.0",
     "check": "tsc --noEmit",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "verify": "node scripts/verify-map.mjs"
+    "verify": "node scripts/verify-map.mjs",
+    "profile": "node scripts/profile-navigation.mjs"
   },
   "dependencies": {
     "@babylonjs/core": "^8.0.0",
     "maplibre-gl": "^6.15.0",
-    "polygon-clipping": "^0.15.7"
+    "pmtiles": "^4.5.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
+    "esbuild": "^0.28.2",
     "typescript": "^5.0.0",
     "vite": "^7.0.0"
   }

@@ -1,6 +1,7 @@
 import type { Map, MapGeoJSONFeature } from 'maplibre-gl';
+import type { BuildingTags } from './tile-data';
 
-export function attachBuildingInspector(map: Map) {
+export function attachBuildingInspector(map: Map, records: BuildingTags) {
   const panel = document.createElement('aside');
   panel.className = 'building-inspector';
   panel.hidden = true;
@@ -20,7 +21,8 @@ export function attachBuildingInspector(map: Map) {
   panel.append(header, content);
   document.querySelector('#app')!.append(panel);
 
-  const clear = () => { panel.hidden = true; };
+  let request: AbortController | undefined;
+  const clear = () => { request?.abort(); panel.hidden = true; };
   close.addEventListener('click', () => {
     clear();
     map.getCanvas().focus({ preventScroll: true });
@@ -49,6 +51,8 @@ export function attachBuildingInspector(map: Map) {
   }
 
   function show(feature: MapGeoJSONFeature, coordinates: { lng: number; lat: number }) {
+    request?.abort();
+    const current = request = new AbortController();
     const properties = feature.properties || {};
     title.textContent = String(properties.name || properties.name_en || 'Building');
     content.replaceChildren();
@@ -57,7 +61,7 @@ export function attachBuildingInspector(map: Map) {
     const status = document.createElement('p');
     status.className = 'building-inspector-status';
     status.setAttribute('role', 'status');
-    status.textContent = 'OSM attributes from the local NYC snapshot.';
+    status.textContent = 'Loading OSM tags…';
     osm.append(status);
     content.append(osm);
     const keys = Object.keys(properties).sort();
@@ -94,7 +98,7 @@ export function attachBuildingInspector(map: Map) {
     geometry.append(summary, raw);
     const note = document.createElement('p');
     note.className = 'building-inspector-note';
-    note.textContent = 'Footprints and tags come from the downloaded OSM snapshot. Heights without an OSM height tag are display estimates; see height_source.';
+    note.textContent = 'Footprints are rendered from local OSM tiles; tags come from the same snapshot. Heights without an OSM height tag are display estimates; see height_source.';
     content.append(geometry, note);
     panel.scrollTop = 0;
     panel.hidden = false;
@@ -104,9 +108,6 @@ export function attachBuildingInspector(map: Map) {
       status.textContent = 'No OSM identity is available for this building.';
       return;
     }
-    let tags: Record<string, string>;
-    try { tags = JSON.parse(properties.osm_tags); }
-    catch { status.textContent = 'Could not read the cached building tags.'; return; }
     osm.replaceChildren();
     const identity = document.createElement('a');
     identity.href = `https://www.openstreetmap.org/${type}/${id}`;
@@ -115,10 +116,16 @@ export function attachBuildingInspector(map: Map) {
     identity.textContent = `OSM ${type}/${id} ↗`;
     const provenance = document.createElement('p');
     provenance.className = 'building-inspector-note';
-    provenance.textContent = `NYC snapshot · ${new Date(properties.snapshot).toLocaleDateString()}`;
-    osm.append(identity, provenance);
-    section(`OSM tags (${Object.keys(tags).length})`, Object.keys(tags).sort().map(key => [key, tags[key]]), osm);
-    if (tags.name || tags['name:en']) title.textContent = tags.name || tags['name:en'];
+    provenance.textContent = `NYC snapshot · ${new Date(records.manifest.snapshot).toLocaleDateString()}`;
+    osm.append(identity, provenance, status);
+    void records.get(type, id, current.signal).then(tags => {
+      if (current.signal.aborted) return;
+      status.remove();
+      section(`OSM tags (${Object.keys(tags).length})`, Object.keys(tags).sort().map(key => [key, tags[key]]), osm);
+      if (tags.name || tags['name:en']) title.textContent = tags.name || tags['name:en'];
+    }).catch(error => {
+      if (!current.signal.aborted) status.textContent = error instanceof Error ? error.message : 'Could not load this building’s tags.';
+    });
   }
 
   map.on('click', event => {
