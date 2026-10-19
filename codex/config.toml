@@ -1,0 +1,4 @@
+# Run routine project work in the sandbox and automatically review escalations.
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
